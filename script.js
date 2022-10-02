@@ -177,13 +177,8 @@ async function locationFind(lat, long)
 function showPosition(position) {
     const lat = position.coords.latitude;
     const long = position.coords.longitude;
-    console.log(lat);
-    console.log(long);
-
     let a = locationFind(lat, long)
     a.then(data =>{
-        console.log(data);
-        console.log(data.items[0].address.city);
         fetchWeatherData(data.items[0].address.city)
     })
 }
