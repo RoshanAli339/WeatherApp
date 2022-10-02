@@ -13,16 +13,12 @@ const search = document.querySelector('.search')
 const btn = document.querySelector('.submit')
 const cities = document.querySelectorAll('.city');
 
-
-//default city when the page loads
-let cityInput = "Guntur";
-
 //Add click even to each city in the panel
 cities.forEach((city) => {
     city.addEventListener('click', (e) => {
-        cityInput = e.target.innerHTML;
+        let cityInput = e.target.innerHTML;
 
-        fetchWeatherData();
+        fetchWeatherData(cityInput);
 
         app.style.opacity = "0";
     });
@@ -35,9 +31,9 @@ form.addEventListener('submit', (e) => {
         alert('Please type in a city name')
     }
     else{
-        cityInput = search.value;
+        let cityInput = search.value;
 
-        fetchWeatherData();
+        fetchWeatherData(cityInput);
         search.value = "";
         app.style.opacity = '0'
     }
@@ -59,7 +55,7 @@ function dayOfTheWeek(day, month, year)
     return weekDay[new Date(day+'/'+month+'/'+year).getDay()];
 }
 
-function fetchWeatherData()
+function fetchWeatherData(cityInput)
 {
     fetch('https://api.weatherapi.com/v1/current.json?key=23a6486f4df540b1ba3112235220110&q='+cityInput)
     .then(response => response.json())
@@ -170,5 +166,25 @@ function fetchWeatherData()
     });
 }
 
-fetchWeatherData();
+navigator.geolocation.getCurrentPosition(showPosition)
+async function locationFind(lat, long)
+{
+    const response = await fetch("https://revgeocode.search.hereapi.com/v1/revgeocode?at="+ lat.toString() +"%2C"+ long.toString() +"&lang=en-US&apiKey=jV0iIizXDIY6YyOEhyv65PQrc9GA3_xqo3knP0K3-NE");
+    const location = await response.json();
+    return location
+}
+
+function showPosition(position) {
+    const lat = position.coords.latitude;
+    const long = position.coords.longitude;
+    console.log(lat);
+    console.log(long);
+
+    let a = locationFind(lat, long)
+    a.then(data =>{
+        console.log(data);
+        console.log(data.items[0].address.city);
+        fetchWeatherData(data.items[0].address.city)
+    })
+}
 app.style.opacity = "1";
