@@ -41,7 +41,7 @@ form.addEventListener('submit', (e) => {
     e.preventDefault();
 });
 
-function dayOfTheWeek(day, month, year)
+function dayOfTheWeek(date)
 {
     const weekDay = [
         "Sunday",
@@ -52,47 +52,52 @@ function dayOfTheWeek(day, month, year)
         "Friday",
         "Saturday"
     ];
-    return weekDay[new Date(day+'/'+month+'/'+year).getDay()];
+    return weekDay[date.getDay()];
 }
 
-function fetchWeatherData(cityInput)
+function fetchWeatherData(city)
 {
-    fetch('https://api.openweathermap.org/data/2.5/weather?q='+cityInput+'&appid=eadd8901dd2dfc505e5fd357144453c0')
+    fetch('https://api.openweathermap.org/data/2.5/weather?q='+city+'&appid=409587a415342ce0e390927304e13e9e')
     .then(response => response.json())
     .then(data =>  {
         console.log(data);
 
-        temp.innerHTML = data.current.temp_c + "&#176";
-        conditionOutput.innerHTML = data.current.condition.text;
+        var temp_c = Math.round(data.main.temp-273.5)
+        temp.innerHTML = temp_c + "&#176";
+        conditionOutput.innerHTML = data.weather[0].main
 
-        const date = data.location.localtime;
-        const y = parseInt(date.substr(0, 4))
-        const m = parseInt(date.substr(5, 2));
-        const d = parseInt(date.substr(8, 2));
-        const time = date.substr(11);
+        const seconds = data.dt;
+        var dateUTC = new Date(seconds*1000);
+        let istOffset = 5.5 * 60 * 60 
+        var dateIST = new Date(dateUTC.getTime() + istOffset)
+        const y = dateIST.getFullYear()
+        const m = dateIST.getMonth()
+        const d = dateIST.getDate()
+        const time = dateIST.toLocaleString('en-US').substr(11);
 
-        dateOutput.innerHTML = dayOfTheWeek(d, m, y) +' - ' + d.toString() + '/' + m.toString() + '/' + y.toString();
+        dateOutput.innerHTML = dayOfTheWeek(dateIST)+' ' + d.toString() + '/' + m.toString() + '/' + y.toString();
         timeOutput.innerHTML = time;
 
-        nameOutput.innerHTML = data.location.name;
+        nameOutput.innerHTML = data.name;
 
-        const iconId = data.current.condition.icon.substr("//cdn.weatherapi.com/weather/64x64/".length)
-        icon.src = "./icons/" + iconId;
+        // const iconId = data.current.condition.icon.substr("//cdn.weatherapi.com/weather/64x64/".length)
+        // icon.src = "./icons/" + iconId;
+        icon.src = "https://openweathermap.org/img/wn/"+data.weather[0].icon+"@2x.png"
 
-        cloudOutput.innerHTML = data.current.cloud + "%";
-        humidityOutput.innerHTML = data.current.humidity + "%";
-        windOutput.innerHTML = data.current.wind_kph + "km/h";
+        cloudOutput.innerHTML = data.clouds.all + "%";
+        humidityOutput.innerHTML = data.main.humidity + "%";
+        windOutput.innerHTML = data.wind.speed + "km/h";
 
         let timeOfDay = "day";
 
-        const code = data.current.condition.code;
+        const code = data.weather[0].icon;
 
-        if (!data.current.is_day)
+        if (code[code.length-1]==='n')
         {
             timeOfDay = "night";
         }
 
-        if (code == 1000)
+        if (code == code.substr(0,2)==='01')
         {
             app.style.backgroundImage = 'url(./images'+timeOfDay+'/clear.jpg)';
             btn.style.background = "#e5ba92";
@@ -103,17 +108,9 @@ function fetchWeatherData(cityInput)
         }
 
         else if(
-            code == 1003 ||
-            code == 1006 ||
-            code == 1009 ||
-            code == 1030 ||
-            code == 1069 ||
-            code == 1087 ||
-            code == 1135 ||
-            code == 1273 ||
-            code == 1276 ||
-            code == 1279 ||
-            code == 1282
+            code === "02d" || code === "02n" ||
+            code === "03d" || code === "03n" ||
+            code === "04d" || code === "04n"
         ){
             app.style.backgroundImage = 'url(./images/'+timeOfDay +'/cloudy.jpg)';
             btn.style.background = "#fa6d1b";
@@ -123,24 +120,9 @@ function fetchWeatherData(cityInput)
             }
         }
         else if(
-            code == 1063 ||
-            code == 1069 ||
-            code == 1072 ||
-            code == 1150 ||
-            code == 1153 ||
-            code == 1180 ||
-            code == 1183 ||
-            code == 1186 ||
-            code == 1189 ||
-            code == 1192 ||
-            code == 1195 ||
-            code == 1204 ||
-            code == 1207 ||
-            code == 1240 ||
-            code == 1243 ||
-            code == 1246 ||
-            code == 1249 ||
-            code == 1252 
+            code === "09d" || code === "09n" ||
+            code === "10d" || code === "10n" ||
+            code === "11d" || code === "11n"
         ){
             app.style.backgroundImage = 'url(./images/'+timeOfDay +'/rainy.jpg)'
             btn.style.background = "#647d75";
@@ -160,7 +142,8 @@ function fetchWeatherData(cityInput)
         app.style.opacity = "1";
     })
 
-    .catch(() => {
+    .catch((err) => {
+        console.log("error occured:", err)
         alert("City not found! please try again!");
         app.style.opacity = "1";
     });
@@ -169,7 +152,7 @@ function fetchWeatherData(cityInput)
 navigator.geolocation.getCurrentPosition(showPosition)
 async function locationFind(lat, long)
 {
-    const response = await fetch("https://revgeocode.search.hereapi.com/v1/revgeocode?at="+ lat.toString() +"%2C"+ long.toString() +"&lang=en-US&apiKey=jV0iIizXDIY6YyOEhyv65PQrc9GA3_xqo3knP0K3-NE");
+    const response = await fetch("https://revgeocode.search.hereapi.com/v1/revgeocode?at="+ lat.toString() +"%2C"+ long.toString() +"&lang=en-US&apiKey=lm6jRkEVS1gxkHqQffvfx9FN7LUdqojvOKzarbEHAN0");
     const location = await response.json();
     return location
 }
