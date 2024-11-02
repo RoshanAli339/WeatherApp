@@ -110,7 +110,7 @@ function fetchWeatherData(city)
         else if(
             code === "02d" || code === "02n" ||
             code === "03d" || code === "03n" ||
-            code === "04d" || code === "04n"
+           code === "04d" || code === "04n"
         ){
             app.style.backgroundImage = 'url(./images/'+timeOfDay +'/cloudy.jpg)';
             btn.style.background = "#fa6d1b";
